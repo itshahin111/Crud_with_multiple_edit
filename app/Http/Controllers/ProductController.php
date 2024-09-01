@@ -48,6 +48,7 @@ class ProductController extends Controller
                 ProductDetail::create($detailData);
             }
 
+
             return redirect()->route('products.index')->with('success', 'Product created successfully.');
         } catch (\Exception $e) {
             return $e->getMessage();
@@ -61,45 +62,63 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
+        // Validate input
         $request->validate([
             'name' => 'required|string|max:255',
             'detail.*' => 'required|string',
-            'image_path.*' => 'image|mimes:jpg,png,jpeg,gif|max:2048',
+            'image_path.*' => 'nullable|image|mimes:jpg,png,jpeg,gif|max:2048',
+            'id.*' => 'nullable|integer' // Validate that each detail ID is an integer
         ]);
 
+        // Update product name
         $product->name = $request->name;
         $product->save();
 
-        // Retrieve existing details
-        $existingDetails = $product->details()->get();
+        // Handle existing and new details
+        for ($i = 0; $i < count($request->detail); $i++) {
+            // Check if the detail ID exists for updating
+            $detailId = $request->id[$i] ?? null; // Get the ID if it exists
 
-        foreach ($request->detail as $index => $detail) {
-            $detailData = [
-                'product_id' => $product->id,
-                'detail' => $detail,
-            ];
+            // Check if existing detail needs to be updated
+            if ($detailId) {
+                $existingDetail = ProductDetail::where('id', $detailId)
+                    ->where('product_id', $product->id)
+                    ->first();
 
-            // Update existing detail or create a new one
-            $existingDetail = $existingDetails[$index] ?? new ProductDetail();
+                if ($existingDetail) {
+                    // Update existing detail
+                    $existingDetail->detail = $request->detail[$i];
 
-            // Check if a new image is uploaded using hasFile()
-            if ($request->hasFile("image_path.$index") && $request->file("image_path.$index")->isValid()) {
-                // Delete old image if it exists
-                if ($existingDetail->image_path) {
-                    Storage::disk('public')->delete($existingDetail->image_path);
+                    // Handle image update if a new image is uploaded
+                    if ($request->hasFile("image_path.$i") && $request->file("image_path.$i")->isValid()) {
+                        // Delete the old image if it exists
+                        if ($existingDetail->image_path) {
+                            Storage::disk('public')->delete($existingDetail->image_path);
+                        }
+
+                        // Store the new image
+                        $image = $request->file("image_path.$i");
+                        $existingDetail->image_path = $image->store('images', 'public');
+                    }
+
+                    $existingDetail->save();
+                }
+            } else {
+                // Create new detail if no existing detail ID is provided
+                $detailData = [
+                    'product_id' => $product->id,
+                    'detail' => $request->detail[$i],
+                ];
+
+                // Handle image upload for new detail
+                if ($request->hasFile("image_path.$i") && $request->file("image_path.$i")->isValid()) {
+                    $image = $request->file("image_path.$i");
+                    $detailData['image_path'] = $image->store('images', 'public');
                 }
 
-                // Upload new image
-                $image = $request->file("image_path.$index");
-                $imagePath = $image->store('images', 'public');
-                $detailData['image_path'] = $imagePath;
-            } else {
-                // Retain existing image if no new one is uploaded
-                $detailData['image_path'] = $existingDetail->image_path;
+                // Create new ProductDetail
+                ProductDetail::create($detailData);
             }
-
-            // Save or update the detail
-            $existingDetail->fill($detailData)->save();
         }
 
         return redirect()->route('products.index')->with('success', 'Product updated successfully.');
