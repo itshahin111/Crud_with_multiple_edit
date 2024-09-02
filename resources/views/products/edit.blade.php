@@ -1,35 +1,44 @@
 @extends('layouts.app')
 
 @section('content')
+    <nav class="navbar bg-body-tertiary">
+        <a class="nav-link active" href="{{ route('products.index') }}">Home</a>
+    </nav>
     <div class="container">
-        <h1>Edit Product</h1>
+        <h1>Edit Product Details</h1>
         <form action="{{ route('products.update', $product) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 
             <div class="form-group mb-3">
                 <label for="name">Product Name</label>
-                <input type="text" class="form-control" name="name" id="name" value="{{ $product->name }}" required>
+                <input type="text" class="form-control" name="name" id="name" value="{{ $product->name }}"
+                    required>
             </div>
 
             <div id="input-fields-container">
                 @foreach ($product->details as $index => $detail)
-                    <div class="item-row border p-3 mb-2" data-id="{{ $detail->id }}">
-                        <input type="text" class="form-control mb-2" name="detail[]" value="{{ $detail->detail }}"
-                            required>
+                    <div class="item-row input-group mb-3" data-id="{{ $detail->id }}">
+                        <!-- Detail Input -->
+                        <input type="text" class="form-control" placeholder="Description" name="detail[]"
+                            value="{{ $detail->detail }}" required>
 
+                        <!-- Show Existing Image if Available -->
                         @if ($detail->image_path)
-                            <img src="{{ asset('storage/' . $detail->image_path) }}" width="100" class="mb-2">
+                            <div class="input-group-append">
+                                <img src="{{ asset('storage/' . $detail->image_path) }}" width="100" class="ml-3">
+                            </div>
                             <input type="hidden" name="existing_image_path[]" value="{{ $detail->image_path }}">
                             <input type="hidden" name="id[]" value="{{ $detail->id }}">
                         @else
                             <input type="hidden" name="existing_image_path[]" value="">
                         @endif
 
-                        <input type="file" class="form-control mb-3" name="image_path[]">
+                        <!-- Image Input -->
+                        <input type="file" class="form-control" name="image_path[]">
 
                         <!-- Remove Button -->
-                        <button type="button" class="btn btn-danger remove-item-row"
+                        <button type="button" class="btn btn-danger remove-item-row ml-2"
                             data-id="{{ $detail->id }}">Remove</button>
                     </div>
                 @endforeach
@@ -48,11 +57,11 @@
             // Event listener for adding a new detail row
             $('#add-item-row').on('click', function() {
                 var clonedDiv = `
-                    <div class="item-row border p-3 mb-2">
-                        <input type="text" class="form-control mb-2" name="detail[]" required>
-                        <input type="file" class="form-control mb-3" name="image_path[]">
+                    <div class="item-row input-group mb-3">
+                        <input type="text" class="form-control" placeholder="Description" name="detail[]" required>
+                        <input type="file" class="form-control" name="image_path[]">
                         <input type="hidden" name="existing_image_path[]" value="">
-                        <button type="button" class="btn btn-danger remove-item-row">Remove</button>
+                        <button type="button" class="btn btn-danger remove-item-row ml-2">Remove</button>
                     </div>
                 `;
                 $('#input-fields-container').append(clonedDiv);
