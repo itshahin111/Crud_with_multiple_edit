@@ -1,7 +1,6 @@
 <?php
 namespace App\Http\Controllers;
 
-use DB;
 use Storage;
 use App\Models\Product;
 use App\Models\ProductDetail;
@@ -66,7 +65,7 @@ class ProductController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'detail.*' => 'required|string',
-            'image_path.*' => 'nullable|image|mimes:jpg,png,jpeg,gif|max:2048',
+            'image_path.*' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
             'id.*' => 'nullable|integer' // Validate that each detail ID is an integer
         ]);
 

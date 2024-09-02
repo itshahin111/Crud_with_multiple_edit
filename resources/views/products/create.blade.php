@@ -2,12 +2,17 @@
 @extends('layouts.app')
 
 @section('content')
+    <nav class="navbar bg-body-tertiary">
+        <a class="nav-link active" href="{{ route('products.index') }}">Home</a>
+    </nav>
     <div class="container">
         <h1>Create Product</h1>
         <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
+            <div class="d-flex flex-row-reverse">
+                <button type="button" class="btn btn-primary" id="add-item-row">Add More</button>
+            </div>
             <div class="form-group">
-                <label for="name">Product Name</label>
                 <input type="text" class="form-control" name="name" placeholder="Name" required>
             </div>
 
@@ -20,7 +25,7 @@
                 </div>
             </div>
 
-            <button type="button" class="btn btn-primary" id="add-item-row">Add Another Item</button>
+
             <button type="submit" class="btn btn-success mt-3">Submit</button>
         </form>
     </div>
